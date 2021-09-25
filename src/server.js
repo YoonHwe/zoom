@@ -18,15 +18,28 @@ const server = http.createServer(app);//createServer를 하려면 requestListene
 
 const wss = new WebSocket.Server({ server });//webSocketServer를 만들었음 http서버 위에
 
+const sockets= [];
+
 wss.on("connection", (socket) => {
+    sockets.push(socket);
+    socket["nickname"] = "Anonymous";
     console.log("Connected to Browser");
     socket.on("close", () => {
         console.log("Disconnected from the Browser");
     })
-    socket.on("message", (message) => {
-        console.log(message.toString('utf-8'));//console.log(message);의 new 'ws' version
+    socket.on("message", (msg) => {
+        const message = JSON.parse(msg);
+        switch(message.type){
+            case "new_message":
+                sockets.forEach((aSocket) => 
+                    aSocket.send(`${socket.nickname}: ${message.payload}`)
+                );
+                break;
+            case "nickname":
+                socket["nickname"] = message.payload;
+                break;
+        }
     });
-    socket.send("hello!!");
 });
 
 server.listen(3000, handleListen);
