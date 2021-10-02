@@ -12,18 +12,25 @@ app.use("/public", express.static(__dirname + "/public"));
 app.get("/", (_,res) => res.render("home"));
 app.get("/*", (_,res) => res.redirect("/"));
 
-const handleListen = () => console.log(`Listening on http://localhost:3000`);
-
 //아래를 통해 http서버와 webSocket서버 둘 다 돌릴 수 있음
 const httpServer = http.createServer(app);//createServer를 하려면 requestListener 경로가 있어야 함 -> app. (express application으로부터 서버를 만드는 과정)
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+    socket.onAny((event) => {
+        console.log(`Socket Event: ${event}`);
+    });
     socket.on("enter_room", (roomName, done) => {
-        console.log(roomName);
-        setTimeout(() => {
-            done("hello from the backend");
-        }, 15000);
+        socket.join(roomName);
+        done();
+        socket.to(roomName).emit("Welcome");
+    });
+    socket.on("disconnecting", () => {
+        socket.rooms.forEach((room) => socket.to(room).emit("Bye"));
+    });
+    socket.on("new_message", (message, room, done) => {
+        socket.to(room).emit("new_message", message);
+        done();
     });
 });
 
@@ -52,5 +59,5 @@ wsServer.on("connection", (socket) => {
 //         }
 //     });
 // });
-
+const handleListen = () => console.log(`Listening on http://localhost:3000`);
 httpServer.listen(3000, handleListen);
