@@ -17,21 +17,25 @@ const httpServer = http.createServer(app);//createServer를 하려면 requestLis
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+    socket["nickname"] = "anonymous";
     socket.onAny((event) => {
         console.log(`Socket Event: ${event}`);
     });
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName);
         done();
-        socket.to(roomName).emit("Welcome");
+        socket.to(roomName).emit("Welcome", socket.nickname );
     });
     socket.on("disconnecting", () => {
-        socket.rooms.forEach((room) => socket.to(room).emit("Bye"));
+        socket.rooms.forEach((room) => socket.to(room).emit("Bye", socket.nickname ));
     });
     socket.on("new_message", (message, room, done) => {
-        socket.to(room).emit("new_message", message);
+        socket.to(room).emit("new_message", `${socket.nickname}: ${message}`);
         done();
     });
+    socket.on("nickname", (nickname) => {
+        socket["nickname"] = nickname;
+    })
 });
 
 //const wss = new WebSocket.Server({ server });//webSocketServer를 만들었음 http서버 위에
