@@ -16,19 +16,41 @@ app.get("/*", (_,res) => res.redirect("/"));
 const httpServer = http.createServer(app);//createServer를 하려면 requestListener 경로가 있어야 함 -> app. (express application으로부터 서버를 만드는 과정)
 const wsServer = SocketIO(httpServer);
 
+function publicRooms(){
+    const socketIds = wsServer.sockets.adapter.sids;
+    const roomIds = wsServer.sockets.adapter.rooms;
+    // const {sockets: {adapter: {sids, rooms}}} = wsServer; //위와 같은 의미
+    const publicRooms = [];
+    roomIds.forEach((_, key) => {
+        if(socketIds.get(key) === undefined){
+            publicRooms.push(key);
+        }
+    })
+    return publicRooms;
+}
+
+function countRoom(roomName){
+    return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 wsServer.on("connection", (socket) => {
     socket["nickname"] = "anonymous";
     socket.onAny((event) => {
         console.log(`Socket Event: ${event}`);
     });
-    socket.on("enter_room", (roomName, done) => {
+    socket.on("enter_room", (roomName, nickname, done) => {
+        socket["nickname"] = nickname;
         socket.join(roomName);
         done();
-        socket.to(roomName).emit("Welcome", socket.nickname );
+        socket.to(roomName).emit("Welcome", socket.nickname, countRoom(roomName));
+        wsServer.sockets.emit("room_change", publicRooms());
     });
     socket.on("disconnecting", () => {
-        socket.rooms.forEach((room) => socket.to(room).emit("Bye", socket.nickname ));
+        socket.rooms.forEach((room) => socket.to(room).emit("Bye", socket.nickname, countRoom(room)-1));
     });
+    socket.on("disconnect", () => {
+        wsServer.sockets.emit("room_change", publicRooms());
+    })
     socket.on("new_message", (message, room, done) => {
         socket.to(room).emit("new_message", `${socket.nickname}: ${message}`);
         done();
