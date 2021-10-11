@@ -68,6 +68,18 @@ wsServer.on("connection", (socket) => {
     })
 });
 
+wsServer.on("connection", socket => {
+    socket.on("join_room", (roomName, done) => {
+        socket.join(roomName);
+        done();
+    })
+});
+
+function startMedia(){
+    welcome.hidden = true;
+    call.hidden = false;
+    getMedia();
+}
 //const wss = new WebSocket.Server({ server });//webSocketServer를 만들었음 http서버 위에
 
 // const sockets= [];
