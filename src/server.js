@@ -1,6 +1,6 @@
 import http from "http";
 // import WebSocket from "ws";
-import { Server }from "socket.io";
+import { Server } from "socket.io";
 import { instrument } from "@socket.io/admin-ui";
 import express from "express";
 
@@ -68,42 +68,21 @@ wsServer.on("connection", (socket) => {
     })
 });
 
-wsServer.on("connection", socket => {
-    socket.on("join_room", (roomName, done) => {
+wsServer.on("connection", (socket) => {
+    socket.on("join_room", (roomName) => {
         socket.join(roomName);
-        done();
-    })
+        socket.to(roomName).emit("welcome");
+    });
+    socket.on("offer", (offer, roomName) => {
+        socket.to(roomName).emit("offer", offer);
+    });
+    socket.on("answer", (answer, roomName) => {
+        socket.to(roomName).emit("answer", answer);
+    });
+    socket.on("ice", (ice, roomName) => {
+        socket.to(roomName).emit("ice", ice);
+    });
 });
 
-function startMedia(){
-    welcome.hidden = true;
-    call.hidden = false;
-    getMedia();
-}
-//const wss = new WebSocket.Server({ server });//webSocketServer를 만들었음 http서버 위에
-
-// const sockets= [];
-
-// wss.on("connection", (socket) => {
-//     sockets.push(socket);
-//     socket["nickname"] = "Anonymous";
-//     console.log("Connected to Browser");
-//     socket.on("close", () => {
-//         console.log("Disconnected from the Browser");
-//     })
-//     socket.on("message", (msg) => {
-//         const message = JSON.parse(msg);
-//         switch(message.type){
-//             case "new_message":
-//                 sockets.forEach((aSocket) => 
-//                     aSocket.send(`${socket.nickname}: ${message.payload}`)
-//                 );
-//                 break;
-//             case "nickname":
-//                 socket["nickname"] = message.payload;
-//                 break;
-//         }
-//     });
-// });
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 httpServer.listen(3000, handleListen);
