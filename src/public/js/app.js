@@ -104,6 +104,7 @@ const welcomeForm = welcome.querySelector("form");
 async function initCall(){
     welcome.hidden = true;
     call.hidden = false;
+    call.style.display = "flex";
     await getMedia();
     makeConnection();
 }

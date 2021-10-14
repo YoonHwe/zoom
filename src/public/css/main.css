@@ -1,0 +1,24 @@
+html{
+    background-color: skyblue;
+}
+header h1{
+    text-align: center;
+}
+main{
+    text-align: center;
+}
+#welcome form{
+    /* border: 3px solid black; */
+}
+#welcome form input{
+    width: 200px;
+}
+#welcome form button{
+    margin-left: 50px;
+}
+#call{
+    /* display: flex; */
+}
+#myStream{
+    width: 50%;
+}
